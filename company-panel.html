@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareerFirst - Panel Firmy B2B</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --neon-yellow: #E5FF00;
+            --hot-pink: #FF0066;
+            --deep-black: #111111;
+            --white: #FFFFFF;
+            --bg-light: #F4F4F5;
+            --text-muted: #71717A;
+            --border-light: #E4E4E7;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body, html { height: 100%; background-color: var(--bg-light); color: var(--deep-black); overflow: hidden; }
+
+        .app-container { display: flex; height: 100vh; width: 100vw; }
+
+        /* --- SIDEBAR B2B (Ciemny motyw dla odróżnienia) --- */
+        .sidebar {
+            width: 280px; background: var(--deep-black); color: var(--white);
+            padding: 32px 24px; display: flex; flex-direction: column; gap: 40px;
+            border-right: 4px solid var(--neon-yellow); z-index: 10;
+        }
+        .brand { 
+            
+            align-items: center; /* Zmiana z baseline na center dla lepszego wyrównania z obrazkiem */
+            gap: 12px; 
+        }
+
+        .brand-logo {
+            height: 32px; /* Ta wysokość sprawi, że logo będzie wielkością zbliżone do starego tekstu */
+            width: auto; /* Szerokość dopasuje się automatycznie do proporcji 2555x416 */
+            display: block;
+        }
+        .brand p { color: var(--text-muted); font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px;}
+        
+        .nav-menu { display: flex; flex-direction: column; gap: 8px; }
+        .nav-btn {
+            padding: 14px 16px; border-radius: 12px; border: none; background: transparent;
+            cursor: pointer; font-weight: 800; text-align: left; transition: 0.2s; font-size: 14px; color: #A1A1AA;
+            display: flex; align-items: center; gap: 12px;
+        }
+        .nav-btn:hover { color: var(--white); background: rgba(255,255,255,0.05); }
+        .nav-btn.active { background: var(--neon-yellow); color: var(--deep-black); }
+
+        .company-profile { margin-top: auto; display: flex; align-items: center; gap: 12px; padding-top: 24px; border-top: 1px solid #333; }
+        .cp-avatar { width: 40px; height: 40px; background: var(--white); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 900; color: var(--deep-black); }
+        .cp-info h4 { font-size: 14px; font-weight: 800; }
+        .cp-info p { font-size: 12px; color: var(--text-muted); font-weight: 600; }
+
+        /* --- OBSZAR ROBOCZY --- */
+        .main-content { flex-grow: 1; display: flex; flex-direction: column; overflow-y: auto; position: relative; }
+        
+        .top-bar { background: var(--white); padding: 20px 40px; border-bottom: 2px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 5; }
+        .top-bar h2 { font-size: 24px; font-weight: 900; }
+        .top-bar-actions { display: flex; gap: 12px; }
+
+        /* Formularz */
+        .form-container { padding: 40px; max-width: 900px; margin: 0 auto; width: 100%; }
+        
+        .form-section { background: var(--white); border: 2px solid var(--deep-black); border-radius: 24px; padding: 32px; box-shadow: 6px 6px 0px var(--deep-black); margin-bottom: 32px; }
+        .form-section-title { font-size: 20px; font-weight: 900; margin-bottom: 24px; display: flex; align-items: center; gap: 10px; border-bottom: 2px solid var(--border-light); padding-bottom: 16px; }
+
+        .input-group { margin-bottom: 20px; }
+        .input-row { display: flex; gap: 20px; }
+        .input-row .input-group { flex: 1; }
+        
+        label { display: block; font-size: 13px; font-weight: 800; color: var(--deep-black); margin-bottom: 8px; text-transform: uppercase; }
+        input[type="text"], input[type="number"], input[type="date"], input[type="time"], select, textarea {
+            width: 100%; padding: 14px 16px; font-size: 15px; font-weight: 600; font-family: 'Inter', sans-serif;
+            border: 2px solid var(--border-light); border-radius: 12px; background: var(--bg-light); transition: 0.2s; outline: none;
+        }
+        input:focus, select:focus, textarea:focus { border-color: var(--hot-pink); background: var(--white); box-shadow: 0 0 0 4px rgba(255, 0, 102, 0.1); }
+        textarea { resize: vertical; min-height: 120px; }
+
+        /* Harmonogram Builder */
+        #schedule-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
+        .schedule-item { display: flex; gap: 12px; align-items: center; }
+        .schedule-item input[type="time"] { width: 120px; }
+        .btn-remove { background: var(--bg-light); border: 2px solid var(--border-light); border-radius: 12px; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 20px; transition: 0.2s; }
+        .btn-remove:hover { border-color: red; color: red; }
+        
+        .btn-outline { background: transparent; border: 2px dashed var(--deep-black); border-radius: 12px; padding: 14px; font-weight: 800; width: 100%; cursor: pointer; transition: 0.2s; color: var(--deep-black); }
+        .btn-outline:hover { background: var(--bg-light); border-style: solid; }
+
+        /* Główny przycisk publikacji */
+        .publish-area { display: flex; justify-content: flex-end; margin-bottom: 60px; }
+        .btn-publish {
+            background: var(--neon-yellow); color: var(--deep-black); border: 4px solid var(--deep-black);
+            padding: 20px 40px; font-size: 18px; font-weight: 900; border-radius: 16px; cursor: pointer;
+            box-shadow: 6px 6px 0px var(--deep-black); transition: transform 0.2s; text-transform: uppercase;
+        }
+        .btn-publish:hover { transform: translate(-2px, -2px); box-shadow: 8px 8px 0px var(--hot-pink); border-color: var(--hot-pink); color: var(--hot-pink); }
+
+        /* Ekran Sukcesu */
+        #success-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--white); z-index: 100; display: none; flex-direction: column;
+            align-items: center; justify-content: center; text-align: center;
+        }
+        #success-screen h1 { font-size: 64px; font-weight: 900; color: var(--hot-pink); margin-bottom: 20px; letter-spacing: -2px;}
+        #success-screen p { font-size: 20px; font-weight: 600; color: var(--text-muted); max-width: 500px; line-height: 1.5; margin-bottom: 40px; }
+        .big-icon { font-size: 100px; margin-bottom: 20px; animation: bounce 1s infinite alternate; }
+        
+        @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-20px); } }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+</head>
+<body>
+
+<div class="app-container">
+    <aside class="sidebar">
+        <div class="brand">
+            <img src="img/sneak_peak3.png" alt="SneakPeak Logo" class="brand-logo">
+            <p>Dla Biznesu</p>
+        </div>
+        <nav class="nav-menu">
+            <button class="nav-btn"> <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#ffffff" viewBox="0 0 256 256"><path d="M216,72H130.67L102.93,51.2a16.12,16.12,0,0,0-9.6-3.2H40A16,16,0,0,0,24,64V200a16,16,0,0,0,16,16H216.89A15.13,15.13,0,0,0,232,200.89V88A16,16,0,0,0,216,72Zm0,128H40V64H93.33L123.2,86.4A8,8,0,0,0,128,88h88Z"></path></svg>
+
+                Pulpit</button>
+            <button class="nav-btn active"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#000000" viewBox="0 0 256 256"><path d="M216,72H130.67L102.93,51.2a16.12,16.12,0,0,0-9.6-3.2H40A16,16,0,0,0,24,64V200a16,16,0,0,0,16,16H216.89A15.13,15.13,0,0,0,232,200.89V88A16,16,0,0,0,216,72Zm0,128H40V64H93.33L123.2,86.4A8,8,0,0,0,128,88h88Zm-56-56a8,8,0,0,1-8,8H136v16a8,8,0,0,1-16,0V152H104a8,8,0,0,1,0-16h16V120a8,8,0,0,1,16,0v16h16A8,8,0,0,1,160,144Z"></path></svg>
+
+                Dodaj Ofertę</button>
+            <button class="nav-btn"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#ffffff" viewBox="0 0 256 256"><path d="M224,64H154.67L126.93,43.2a16.12,16.12,0,0,0-9.6-3.2H72A16,16,0,0,0,56,56V72H40A16,16,0,0,0,24,88V200a16,16,0,0,0,16,16H192.89A15.13,15.13,0,0,0,208,200.89V184h16.89A15.13,15.13,0,0,0,240,168.89V80A16,16,0,0,0,224,64ZM192,200H40V88H85.33l29.87,22.4A8,8,0,0,0,120,112h72Zm32-32H208V112a16,16,0,0,0-16-16H122.67L94.93,75.2a16.12,16.12,0,0,0-9.6-3.2H72V56h45.33L147.2,78.4A8,8,0,0,0,152,80h72Z"></path></svg>
+
+                 Twoje Oferty (3)</button>
+            <button class="nav-btn"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#ffffff" viewBox="0 0 256 256"><path d="M168,56a8,8,0,0,1,8-8h16V32a8,8,0,0,1,16,0V48h16a8,8,0,0,1,0,16H208V80a8,8,0,0,1-16,0V64H176A8,8,0,0,1,168,56Zm62.56,54.68a103.92,103.92,0,1,1-85.24-85.24,8,8,0,0,1-2.64,15.78A88.07,88.07,0,0,0,40,128a87.62,87.62,0,0,0,22.24,58.41A79.66,79.66,0,0,1,98.3,157.66a48,48,0,1,1,59.4,0,79.66,79.66,0,0,1,36.06,28.75A87.62,87.62,0,0,0,216,128a88.85,88.85,0,0,0-1.22-14.68,8,8,0,1,1,15.78-2.64ZM128,152a32,32,0,1,0-32-32A32,32,0,0,0,128,152Zm0,64a87.57,87.57,0,0,0,53.92-18.5,64,64,0,0,0-107.84,0A87.57,87.57,0,0,0,128,216Z"></path></svg>
+
+                 Kandydaci</button>
+            <button class="nav-btn"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#ffffff" viewBox="0 0 256 256"><path d="M128,80a48,48,0,1,0,48,48A48.05,48.05,0,0,0,128,80Zm0,80a32,32,0,1,1,32-32A32,32,0,0,1,128,160Zm109.94-52.79a8,8,0,0,0-3.89-5.4l-29.83-17-.12-33.62a8,8,0,0,0-2.83-6.08,111.91,111.91,0,0,0-36.72-20.67,8,8,0,0,0-6.46.59L128,41.85,97.88,25a8,8,0,0,0-6.47-.6A112.1,112.1,0,0,0,54.73,45.15a8,8,0,0,0-2.83,6.07l-.15,33.65-29.83,17a8,8,0,0,0-3.89,5.4,106.47,106.47,0,0,0,0,41.56,8,8,0,0,0,3.89,5.4l29.83,17,.12,33.62a8,8,0,0,0,2.83,6.08,111.91,111.91,0,0,0,36.72,20.67,8,8,0,0,0,6.46-.59L128,214.15,158.12,231a7.91,7.91,0,0,0,3.9,1,8.09,8.09,0,0,0,2.57-.42,112.1,112.1,0,0,0,36.68-20.73,8,8,0,0,0,2.83-6.07l.15-33.65,29.83-17a8,8,0,0,0,3.89-5.4A106.47,106.47,0,0,0,237.94,107.21Zm-15,34.91-28.57,16.25a8,8,0,0,0-3,3c-.58,1-1.19,2.06-1.81,3.06a7.94,7.94,0,0,0-1.22,4.21l-.15,32.25a95.89,95.89,0,0,1-25.37,14.3L134,199.13a8,8,0,0,0-3.91-1h-.19c-1.21,0-2.43,0-3.64,0a8.08,8.08,0,0,0-4.1,1l-28.84,16.1A96,96,0,0,1,67.88,201l-.11-32.2a8,8,0,0,0-1.22-4.22c-.62-1-1.23-2-1.8-3.06a8.09,8.09,0,0,0-3-3.06l-28.6-16.29a90.49,90.49,0,0,1,0-28.26L61.67,97.63a8,8,0,0,0,3-3c.58-1,1.19-2.06,1.81-3.06a7.94,7.94,0,0,0,1.22-4.21l.15-32.25a95.89,95.89,0,0,1,25.37-14.3L122,56.87a8,8,0,0,0,4.1,1c1.21,0,2.43,0,3.64,0a8.08,8.08,0,0,0,4.1-1l28.84-16.1A96,96,0,0,1,188.12,55l.11,32.2a8,8,0,0,0,1.22,4.22c.62,1,1.23,2,1.8,3.06a8.09,8.09,0,0,0,3,3.06l28.6,16.29A90.49,90.49,0,0,1,222.9,142.12Z"></path></svg>
+
+                 Ustawienia</button>
+        </nav>
+        <div class="company-profile">
+            <div class="cp-avatar">C</div>
+            <div class="cp-info">
+                <h4>PrimeBit Studio</h4>
+                <p>Plan Premium</p>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content" id="main-scroll">
+        <header class="top-bar">
+            <h2>Zaplanuj warsztaty</h2>
+            <div class="top-bar-actions">
+                <button style="padding: 10px 20px; border-radius: 10px; border: 2px solid var(--border-light); background: transparent; font-weight: 800; cursor: pointer;">Zapisz szkic</button>
+            </div>
+        </header>
+
+        <div class="form-container" id="form-area">
+            <form id="offer-form">
+                
+                <div class="form-section">
+                    <div class="form-section-title"><span>1️⃣</span> Podstawowe Informacje</div>
+                    
+                    <div class="input-group">
+                        <label>Chwytliwy Tytuł Oferty</label>
+                        <input type="text" placeholder="np. Dzień z Game Devem od kuchni" required>
+                    </div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>Branża / Kategoria</label>
+                            <select required>
+                                <option value="" disabled selected>Wybierz z listy...</option>
+                                <option value="tech">💻 IT & Tech</option>
+                                <option value="design">🎨 Design & Grafika</option>
+                                <option value="moto">🚗 Motoryzacja</option>
+                                <option value="kuchnia">🍔 Gastronomia</option>
+                                <option value="logistyka">📦 Logistyka</option>
+                                <option value="medycyna">🩺 Medycyna</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Miasto (Lokalizacja Biura)</label>
+                            <input type="text" placeholder="np. Rzeszów" required>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Krótki Opis (Zajawka na mapie)</label>
+                        <input type="text" placeholder="Jedno, dwa zdania. Np: Zobacz jak powstają hity sprzedażowe w naszej agencji!" required maxlength="120">
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="form-section-title"><span>2️⃣</span> Szczegóły i Opis</div>
+                    
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>Data wydarzenia</label>
+                            <input type="date" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Liczba wolnych miejsc (FOMO!)</label>
+                            <input type="number" placeholder="np. 3" min="1" max="50" required>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Pełny opis wydarzenia</label>
+                        <textarea placeholder="Napisz do Gen-Z. Bez korpo-mowy! Co dokładnie będą robić? Kogo poznają? Czy będzie darmowa pizza? " required></textarea>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="form-section-title"><span>3️⃣</span> Harmonogram Dnia (Opcjonalnie)</div>
+                    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px; font-weight: 600;">Młodzi lubią wiedzieć co ich czeka. Rozpisz plan krok po kroku.</p>
+                    
+                    <div id="schedule-list">
+                        <div class="schedule-item">
+                            <input type="time" value="09:00" required>
+                            <input type="text" placeholder="np. Poranna kawa i integracja z zespołem" required style="flex-grow: 1;">
+                            <button type="button" class="btn-remove" onclick="this.parentElement.remove()">🗑️</button>
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn-outline" onclick="addScheduleItem()">+ Dodaj kolejny punkt programu</button>
+                </div>
+
+                <div class="publish-area">
+                    <button type="submit" class="btn-publish">Opublikuj Ofertę</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="success-screen">
+            <div class="big-icon">🎉</div>
+            <h1>Bomba! Oferta zrobiona.</h1>
+            <p>Twoje wydarzenie trafiło właśnie na mapę główną aplikacji. Gen-Z już widzą Twoją firmę i mogą rezerwować miejsca.</p>
+            <button onclick="location.reload()" style="background: var(--deep-black); color: var(--neon-yellow); padding: 16px 32px; font-size: 16px; font-weight: 800; border-radius: 12px; border: none; cursor: pointer; margin-top: 20px;">Dodaj kolejną ofertę</button>
+        </div>
+    </main>
+</div>
+
+<script>
+    // Dodawanie nowych punktów do harmonogramu
+    function addScheduleItem() {
+        const list = document.getElementById('schedule-list');
+        const newItem = document.createElement('div');
+        newItem.className = 'schedule-item';
+        
+        newItem.innerHTML = `
+            <input type="time" required>
+            <input type="text" placeholder="Co będzie się działo?" required style="flex-grow: 1;">
+            <button type="button" class="btn-remove" onclick="this.parentElement.remove()">🗑️</button>
+        `;
+        list.appendChild(newItem);
+    }
+
+    // Obsługa wysyłania formularza (Fake Submit na potrzeby prezentacji)
+    // Obsługa wysyłania formularza (Fake Submit na potrzeby prezentacji)
+    document.getElementById('offer-form').addEventListener('submit', function(e) {
+        e.preventDefault(); // Zapobiega przeładowaniu strony
+        
+        // Pokaż ekran sukcesu i przewiń na samą górę okna
+        document.getElementById('form-area').style.display = 'none';
+        document.querySelector('.top-bar').style.display = 'none';
+        
+        const successScreen = document.getElementById('success-screen');
+        successScreen.style.display = 'flex';
+        
+        // Przewiń główny obszar na górę
+        document.getElementById('main-scroll').scrollTo(0, 0);
+        
+        // --- EFEKT KONFETTI ---
+        confetti({
+            particleCount: 150, // Ilość papierków
+            spread: 80, // Rozrzut
+            origin: { y: 0.6 }, // Z jakiej wysokości strzela (0 to góra, 1 to dół)
+            zIndex: 1000, // Żeby było nad wszystkim
+            colors: ['#E5FF00', '#FF0066', '#111111'] // Kolory z Twojego CSS (neon-yellow, hot-pink, deep-black)!
+        });
+        
+        // Opcjonalnie: Konfetti w konsoli dla jury ;)
+        console.log("%c OFERTA OPUBLIKOWANA! ", "background: #E5FF00; color: #111111; font-size: 24px; font-weight: bold;");
+    });
+</script>
+
+</body>
+</html>

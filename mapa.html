@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareerFirst - Smart Search & Feed</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <style>
+        /* --- PALETA KOLORÓW GEN-Z --- */
+        :root {
+            --neon-yellow: #E5FF00;
+            --hot-pink: #FF0066;
+            --deep-black: #111111;
+            --white: #FFFFFF;
+            --bg-light: #F4F4F5;
+            --text-muted: #71717A;
+            --border-light: #E4E4E7;
+            --card-radius: 24px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body, html { height: 100%; background-color: var(--bg-light); color: var(--deep-black); overflow: hidden; }
+
+        .app-container { display: flex; flex-direction: column; height: 100vh; width: 100vw; position: relative; }
+
+        /* --- 1. GÓRNY PASEK NAWIGACJI (HEADER) --- */
+        .top-nav {
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--white); padding: 16px 32px; border-bottom: 2px solid var(--deep-black); z-index: 2000;
+        }
+        .brand { 
+            display: flex; 
+            align-items: center; /* Zmiana z baseline na center dla lepszego wyrównania z obrazkiem */
+            gap: 12px; 
+        }
+
+        .brand-logo {
+            height: 32px; /* Ta wysokość sprawi, że logo będzie wielkością zbliżone do starego tekstu */
+            width: auto; /* Szerokość dopasuje się automatycznie do proporcji 2555x416 */
+            display: block;
+        }
+        .brand p { color: var(--text-muted); font-weight: 800; font-size: 13px; text-transform: uppercase;}
+        
+        .nav-menu { display: flex; gap: 16px; }
+        .nav-btn {
+            padding: 12px 24px; border-radius: 99px; border: 2px solid transparent; background: var(--bg-light);
+            cursor: pointer; font-weight: 800; transition: 0.2s; font-size: 14px; color: var(--text-muted); display: flex; align-items: center; justify-content: center;
+        }
+        .nav-btn.active { background: var(--neon-yellow); color: var(--deep-black); border-color: var(--deep-black); }
+        .nav-btn:hover:not(.active) { border-color: var(--hot-pink); color: var(--deep-black); }
+
+        /* --- SYSTEM WIDOKÓW --- */
+        .main-content { flex-grow: 1; display: flex; overflow: hidden; position: relative; }
+        .view { height: 100%; width: 100%; display: none; overflow-y: auto; }
+        .view.active { display: flex; }
+
+        /* --- 2. WIDOK MAPY Z LEWYM PANELEM --- */
+        #view-map { flex-direction: row; }
+        
+        /* LEWY PANEL (Feed Ofert) */
+        .left-panel {
+            width: 420px; background: var(--bg-light); display: flex; flex-direction: column;
+            border-right: 2px solid var(--deep-black); z-index: 1000; flex-shrink: 0;
+        }
+        
+        .panel-header { background: var(--white); padding: 24px; border-bottom: 2px solid var(--deep-black); }
+        
+        .top-search {
+            background: var(--white); padding: 12px 20px; border-radius: 12px; margin-bottom: 16px;
+            display: flex; align-items: center; border: 2px solid var(--deep-black); box-shadow: 4px 4px 0px var(--deep-black);
+            transition: 0.2s;
+        }
+        .top-search:focus-within { box-shadow: 6px 6px 0px var(--hot-pink); transform: translate(-2px, -2px); }
+        .top-search input { border: none; outline: none; width: 100%; padding: 4px 8px; font-size: 15px; font-weight: 600; }
+
+        .map-filters { display: flex; gap: 8px; flex-wrap: wrap; }
+        .filter-pill {
+            padding: 8px 14px; background: var(--white); border: 2px solid var(--deep-black);
+            border-radius: 99px; font-weight: 800; font-size: 11px; text-transform: uppercase;
+            cursor: pointer; transition: 0.2s; box-shadow: 2px 2px 0px var(--deep-black); color: var(--deep-black);
+        }
+        .filter-pill:hover:not(.active) { transform: translate(-1px, -1px); box-shadow: 3px 3px 0px var(--deep-black); }
+        .filter-pill.active { background: var(--neon-yellow); transform: translate(2px, 2px); box-shadow: 0px 0px 0px var(--deep-black); }
+
+        /* Lista Ofert */
+        .offers-list { flex-grow: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+        
+        .mini-card {
+            background: var(--white); border: 2px solid var(--deep-black); border-radius: 16px;
+            padding: 16px; box-shadow: 4px 4px 0px var(--deep-black); cursor: pointer; transition: 0.2s;
+            display: flex; gap: 16px; align-items: center;
+        }
+        .mini-card:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0px var(--hot-pink); border-color: var(--hot-pink); }
+        .mc-icon { width: 56px; height: 56px; border-radius: 12px; border: 2px solid var(--deep-black); overflow: hidden; flex-shrink: 0; background: var(--bg-light); }
+        .mc-icon img { width: 100%; height: 100%; object-fit: cover; }
+        .mc-info { flex-grow: 1; }
+        .mc-info h4 { font-size: 15px; font-weight: 900; margin-bottom: 4px; line-height: 1.2; }
+        .mc-info p { font-size: 12px; color: var(--text-muted); font-weight: 600; margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 250px;}
+        
+        /* Kontener Mapy */
+        #map-container { flex-grow: 1; position: relative; }
+        #map { height: 100%; width: 100%; position: absolute; top:0; left:0; z-index: 1; }
+
+        /* --- STYLIZACJA MAPY (POP-UP I ZNACZNIKI) --- */
+        .leaflet-popup-content-wrapper { border-radius: var(--card-radius); padding: 0; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.2); border: 2px solid var(--deep-black); }
+        .leaflet-popup-content { margin: 0; width: 280px !important; }
+        .company-card { background: var(--white); }
+        .company-header { background: var(--neon-yellow); padding: 20px; display: flex; align-items: center; gap: 16px; border-bottom: 2px solid var(--deep-black); }
+        .company-icon-wrap { width: 48px; height: 48px; background: var(--white); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; border: 2px solid var(--deep-black); box-shadow: 2px 2px 0px var(--deep-black); overflow: hidden; }
+        .company-icon-img { width: 100%; height: 100%; object-fit: cover; }
+        .company-title h4 { font-size: 16px; font-weight: 900; line-height: 1.2; }
+        .company-tag { font-size: 10px; font-weight: 800; background: var(--white); padding: 4px 8px; border-radius: 6px; display: inline-block; margin-top: 6px; border: 1px solid var(--deep-black); }
+        .company-info { padding: 20px; }
+        
+        .seats-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--bg-light); color: var(--deep-black); padding: 6px 10px; border-radius: 8px; font-size: 12px; font-weight: 900; border: 1px solid var(--border-light); margin-bottom: 12px; }
+        .seats-badge.low { background: var(--hot-pink); color: var(--white); border-color: var(--hot-pink); animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 0, 102, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(255, 0, 102, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 0, 102, 0); } }
+
+        .company-info p { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.5; font-weight: 600; }
+        .action-buttons { display: flex; flex-direction: column; gap: 8px; }
+        .btn-primary { width: 100%; padding: 12px; background: var(--hot-pink); color: var(--white); border: none; border-radius: 12px; font-weight: 800; font-size: 14px; cursor: pointer; transition: 0.2s; }
+        .btn-primary:hover:not(:disabled) { background: #e6005c; transform: translateY(-2px); }
+        .btn-primary:disabled { background: var(--deep-black); color: var(--neon-yellow); cursor: default; }
+        .btn-secondary { width: 100%; padding: 12px; background: transparent; color: var(--deep-black); border: 2px solid var(--deep-black); border-radius: 12px; font-weight: 800; font-size: 14px; cursor: pointer; transition: 0.2s; }
+        .btn-secondary:hover { background: var(--border-light); }
+
+        .custom-marker { background: var(--deep-black); border: 3px solid var(--neon-yellow); border-radius: 50%; box-shadow: 0 8px 16px rgba(0,0,0,0.2); text-align: center; line-height: 34px; font-size: 18px; transition: transform 0.2s; overflow: hidden; }
+        .custom-marker img { width: 100%; height: 100%; object-fit: cover; }
+        .custom-marker:hover { transform: scale(1.15) translateY(-5px); border-color: var(--hot-pink); z-index: 1000 !important; }
+
+        /* --- 3. WIDOK PROFILU --- */
+        #view-profile { display: none; width: 100%; }
+        #view-profile.active { display: block; }
+        .container-padding { padding: 40px 60px; max-width: 1400px; margin: 0 auto; width: 100%;}
+        .section-title { font-size: 32px; font-weight: 900; margin-bottom: 24px; text-transform: uppercase; letter-spacing: -1px;}
+        .upcoming-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-bottom: 50px; }
+        .upcoming-card { background: var(--white); border: 2px solid var(--deep-black); border-radius: 16px; padding: 20px; display: flex; align-items: center; gap: 16px; box-shadow: 4px 4px 0px var(--deep-black); }
+        .uc-icon { font-size: 32px; background: var(--bg-light); width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 12px; border: 1px solid var(--border-light); overflow: hidden;}
+        .uc-info h4 { font-size: 16px; font-weight: 900; }
+        .uc-info p { font-size: 13px; color: var(--hot-pink); font-weight: 800; margin-top: 4px;}
+
+        /* --- 4. WIDOK SZCZEGÓŁÓW OFERTY --- */
+        #view-details { display: none; width: 100%; }
+        #view-details.active { display: block; }
+        .back-btn { background: transparent; border: none; font-size: 16px; font-weight: 800; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 8px; margin-bottom: 24px; transition: 0.2s; }
+        .back-btn:hover { color: var(--deep-black); }
+        
+        .detail-banner { background: var(--neon-yellow); border: 4px solid var(--deep-black); border-radius: 32px; padding: 50px; display: flex; align-items: center; gap: 30px; box-shadow: 8px 8px 0px var(--deep-black); margin-bottom: 40px; }
+        .detail-banner-icon { font-size: 70px; background: var(--white); width: 120px; height: 120px; display: flex; align-items: center; justify-content: center; border-radius: 24px; border: 4px solid var(--deep-black); overflow: hidden; }
+        .detail-banner-text h1 { font-size: 48px; font-weight: 900; line-height: 1; margin-bottom: 10px; letter-spacing: -2px; }
+        .detail-banner-text h3 { font-size: 20px; font-weight: 800; color: var(--deep-black); opacity: 0.7; text-transform: uppercase; }
+
+        .detail-layout { display: grid; grid-template-columns: 7fr 3fr; gap: 40px; align-items: start; }
+        .detail-left section { background: var(--white); border: 2px solid var(--border-light); border-radius: 24px; padding: 40px; margin-bottom: 24px; }
+        .detail-left h2 { font-size: 24px; font-weight: 900; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .detail-left p { font-size: 16px; color: var(--text-muted); line-height: 1.7; font-weight: 500; }
+        
+        .schedule-list { list-style: none; }
+        .schedule-list li { display: flex; gap: 20px; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px dashed var(--border-light); }
+        .schedule-list li:last-child { border: none; margin: 0; padding: 0; }
+        .schedule-time { font-weight: 900; color: var(--hot-pink); min-width: 70px; }
+        .schedule-desc { font-weight: 600; color: var(--deep-black); }
+
+        .detail-right { position: sticky; top: 40px; }
+        .ticket-card { background: var(--white); border: 3px solid var(--deep-black); border-radius: 24px; padding: 32px; box-shadow: 8px 8px 0px var(--deep-black); }
+        .ticket-header { border-bottom: 2px solid var(--border-light); padding-bottom: 20px; margin-bottom: 20px; }
+        .ticket-header p { font-size: 14px; color: var(--text-muted); font-weight: 800; text-transform: uppercase; margin-bottom: 8px; }
+        .ticket-header h3 { font-size: 20px; font-weight: 900; color: var(--hot-pink); margin-bottom: 12px;}
+        
+        .checkbox-wrapper { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 24px; }
+        .checkbox-wrapper input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--hot-pink); cursor: pointer; margin-top: 2px; }
+        .checkbox-wrapper label { font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer; line-height: 1.4; }
+        .checkbox-wrapper label a { color: var(--deep-black); font-weight: 800; text-decoration: underline; }
+        .btn-ticket { width: 100%; padding: 20px; font-size: 18px; border-radius: 16px; }
+    
+        .badge-card {
+    background: var(--white);
+    border: 3px solid var(--deep-black);
+    border-radius: 20px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 6px 6px 0px var(--neon-yellow);
+    transition: 0.3s;
+}
+
+.badge-card:hover {
+    transform: rotate(-2deg) scale(1.05);
+    box-shadow: 8px 8px 0px var(--hot-pink);
+}
+
+.badge-icon {
+    font-size: 40px;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.badge-name {
+    font-weight: 900;
+    text-transform: uppercase;
+    font-size: 13px;
+    display: block;
+}
+
+.badge-locked {
+    filter: grayscale(1);
+    opacity: 0.5;
+    box-shadow: 4px 4px 0px var(--border-light);
+}
+.badge-progress-container {
+    width: 100%;
+    height: 12px;
+    background: var(--bg-light);
+    border: 2px solid var(--deep-black);
+    border-radius: 99px;
+    margin-top: 10px;
+    overflow: hidden;
+    position: relative;
+}
+
+.badge-progress-bar {
+    height: 100%;
+    background: var(--neon-yellow);
+    border-right: 2px solid var(--deep-black);
+    transition: width 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.badge-count {
+    font-size: 10px;
+    font-weight: 900;
+    margin-top: 4px;
+    display: block;
+    color: var(--text-muted);
+}
+    
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header class="top-nav">
+        <div class="brand">
+            <img src="img/sneak_peak2.png" alt="SneakPeak Logo" class="brand-logo">
+            <p>Jeden dzień. Prawdziwa kariera.</p>
+        </div>
+        <div class="nav-menu">
+            <a href="szkola.html" class="nav-btn"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#000000" viewBox="0 0 256 256"><path d="M226.53,56.41l-96-32a8,8,0,0,0-5.06,0l-96,32A8,8,0,0,0,24,64v80a8,8,0,0,0,16,0V75.1L73.59,86.29a64,64,0,0,0,20.65,88.05c-18,7.06-33.56,19.83-44.94,37.29a8,8,0,1,0,13.4,8.74C77.77,197.25,101.57,184,128,184s50.23,13.25,65.3,36.37a8,8,0,0,0,13.4-8.74c-11.38-17.46-27-30.23-44.94-37.29a64,64,0,0,0,20.65-88l44.12-14.7a8,8,0,0,0,0-15.18ZM176,120A48,48,0,1,1,89.35,91.55l36.12,12a8,8,0,0,0,5.06,0l36.12-12A47.89,47.89,0,0,1,176,120ZM128,87.57,57.3,64,128,40.43,198.7,64Z"></path></svg>| DLA SZKÓŁ</a>
+            <a href="index.html" class="nav-btn"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#000000" viewBox="0 0 256 256"><path d="M220.17,100,202.86,70a28,28,0,0,0-38.24-10.25,27.69,27.69,0,0,0-9,8.34L138.2,38a28,28,0,0,0-48.48,0A28,28,0,0,0,48.15,74l1.59,2.76A27.67,27.67,0,0,0,38,80.41a28,28,0,0,0-10.24,38.25l40,69.32a87.47,87.47,0,0,0,53.43,41,88.56,88.56,0,0,0,22.92,3,88,88,0,0,0,76.06-132Zm-6.66,62.64A72,72,0,0,1,81.62,180l-40-69.32a12,12,0,0,1,20.78-12L81.63,132a8,8,0,1,0,13.85-8L62,66A12,12,0,1,1,82.78,54L114,108a8,8,0,1,0,13.85-8L103.57,58h0a12,12,0,1,1,20.78-12l33.42,57.9a48,48,0,0,0-5.54,60.6,8,8,0,0,0,13.24-9A32,32,0,0,1,172.78,112a8,8,0,0,0,2.13-10.4L168.23,90A12,12,0,1,1,189,78l17.31,30A71.56,71.56,0,0,1,213.51,162.62ZM184.25,31.71A8,8,0,0,1,194,26a59.62,59.62,0,0,1,36.53,28l.33.57a8,8,0,1,1-13.85,8l-.33-.57a43.67,43.67,0,0,0-26.8-20.5A8,8,0,0,1,184.25,31.71ZM80.89,237a8,8,0,0,1-11.23,1.33A119.56,119.56,0,0,1,40.06,204a8,8,0,0,1,13.86-8,103.67,103.67,0,0,0,25.64,29.72A8,8,0,0,1,80.89,237Z"></path></svg>| STRONA GŁÓWNA</a>
+           <button class="nav-btn active" onclick="switchView('map', this)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm88,104a87.62,87.62,0,0,1-6.4,32.94l-44.7-27.49a15.92,15.92,0,0,0-6.24-2.23l-22.82-3.08a16.11,16.11,0,0,0-16,7.86h-8.72l-3.8-7.86a15.91,15.91,0,0,0-11-8.67l-8-1.73L96.14,104h16.71a16.06,16.06,0,0,0,7.73-2l12.25-6.76a16.62,16.62,0,0,0,3-2.14l26.91-24.34A15.93,15.93,0,0,0,166,49.1l-.36-.65A88.11,88.11,0,0,1,216,128ZM143.31,41.34,152,56.9,125.09,81.24,112.85,88H96.14a16,16,0,0,0-13.88,8l-8.73,15.23L63.38,84.19,74.32,58.32a87.87,87.87,0,0,1,69-17ZM40,128a87.53,87.53,0,0,1,8.54-37.8l11.34,30.27a16,16,0,0,0,11.62,10l21.43,4.61L96.74,143a16.09,16.09,0,0,0,14.4,9h1.48l-7.23,16.23a16,16,0,0,0,2.86,17.37l.14.14L128,205.94l-1.94,10A88.11,88.11,0,0,1,40,128Zm102.58,86.78,1.13-5.81a16.09,16.09,0,0,0-4-13.9,1.85,1.85,0,0,1-.14-.14L120,174.74,133.7,144l22.82,3.08,45.72,28.12A88.18,88.18,0,0,1,142.58,214.78Z"></path></svg>
+                | MAPA OFERT
+            </button>
+            <button class="nav-btn" onclick="switchView('profile', this)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 256 256"><path d="M168,104H88a40,40,0,0,0-40,40v8a40,40,0,0,0,40,40h80a40,40,0,0,0,40-40v-8A40,40,0,0,0,168,104Zm24,48a24,24,0,0,1-24,24H88a24,24,0,0,1-24-24v-8a24,24,0,0,1,24-24h80a24,24,0,0,1,24,24ZM208,40a32.06,32.06,0,0,0-31,24H79a32,32,0,0,0-63,8v80a72.08,72.08,0,0,0,72,72h80a72.08,72.08,0,0,0,72-72V72A32,32,0,0,0,208,40Zm16,112a56.06,56.06,0,0,1-56,56H88a56.06,56.06,0,0,1-56-56V72a16,16,0,0,1,32,0,8,8,0,0,0,8,8H184a8,8,0,0,0,8-8,16,16,0,0,1,32,0Zm-120-4a12,12,0,1,1-12-12A12,12,0,0,1,104,148Zm72,0a12,12,0,1,1-12-12A12,12,0,0,1,176,148Z"></path></svg>
+                | TWÓJ PROFIL
+            </button>
+        </div>
+    </header>
+
+    <div class="main-content">
+        
+        <div id="view-map" class="view active">
+            <div class="left-panel">
+                <div class="panel-header">
+                    <div class="top-search">
+                        <span style="font-size: 18px; opacity: 0.5; margin-right: 8px;">🔍</span>
+                        <input type="text" id="main-search-input" placeholder="Szukaj miasta, branży, firmy...">
+                    </div>
+                    <div class="map-filters">
+                        <button class="filter-pill active" data-category="all">🌍 Wszystkie</button>
+                        <button class="filter-pill" data-category="tech">💻 Tech</button>
+                        <button class="filter-pill" data-category="moto">🚗 Moto</button>
+                        <button class="filter-pill" data-category="design">🎨 Design</button>
+                        <button class="filter-pill" data-category="beauty">💄 Beauty</button>
+                        <button class="filter-pill" data-category="kuchnia">🍔 Kuchnia</button>
+                        <button class="filter-pill" data-category="logistyka">📦 Logistyka</button>
+                        <button class="filter-pill" data-category="medycyna">🩺 Medycyna</button>
+                    </div>
+                </div>
+                <div class="offers-list" id="offers-list"></div>
+            </div>
+            
+            <div id="map-container">
+                <div id="map"></div>
+            </div>
+        </div>
+
+        <div id="view-profile" class="view" style="background: var(--bg-light);">
+            
+            <div class="container-padding">
+                <h2 class="section-title">Cześć, GenZ! 👋</h2>
+                <h3 class="section-title" style="font-size: 20px; margin-top: 40px;">🏆 Twoje Odznaki</h3>
+                <div id="badges-container" class="upcoming-grid"></div>
+                <h3 class="section-title" style="font-size: 20px; margin-top: 40px;">📅 Nadchodzące wizyty</h3>
+                <div id="upcoming-list" class="upcoming-grid"></div>
+            </div>
+        </div>
+
+        <div id="view-details" class="view" style="background: var(--bg-light);">
+            <div class="container-padding" id="details-content-area"></div>
+        </div>
+    </div>
+</div>
+
+        
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    window.openDetails = openDetails;
+    window.switchView = switchView;
+    window.quickSignUp = quickSignUp;
+    // --- 1. Inicjalizacja Mapy ---
+    const map = L.map('map', { zoomControl: false }).setView([50.0413, 21.9990], 13);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+    const getFallback = (name) => `https://placehold.co/100x100/111111/E5FF00?text=${name.charAt(0)}&font=montserrat`;
+
+    // --- 2. Baza Danych ---
+    const companies = [
+        { 
+            id: 1, name: "PrimeBit Games", title: "Dzień z Game Devem", category: "tech", city: "Rzeszów", lat: 50.07058, lng: 21.97042, tag: "NOWE", 
+            icon: "img/PBlogo.png", availableSeats: 3,
+            date: "24 Maja 2026", time: "09:00 - 14:00", desc: "Zobacz jak działa produkcja gier komputerowych na żywo.",
+            fullDesc: "Zanurz się w świecie kodu! Podczas tego Job Shadowingu zobaczysz, jak wygląda prawdziwy dzień programisty gier komputerowych. Nie potrzebujesz żadnego doświadczenia.",
+            schedule: [{ time: "09:00", event: "Poranna kawa i intro" }, { time: "10:30", event: "Pair programming" }, { time: "13:00", event: "Wspólna pizza 🍕" }]
+        },
+        { 
+            id: 2, name: "Asseco Poland", title: "Architektura Systemów Bankowych", category: "tech", city: "Rzeszów", lat: 50.05168, lng: 22.03324, tag: "PRESTIŻ", 
+            icon: "img/asseco.png", availableSeats: 5,
+            date: "26 Maja 2026", time: "08:30 - 15:00", desc: "Poznaj kulisy tworzenia systemów dla największych banków.",
+            fullDesc: "Spędź dzień w największej firmie IT w Polsce. Zobaczysz jak zarządza się projektami o skali globalnej.",
+            schedule: [{ time: "08:30", event: "Daily Stand-up" }, { time: "11:00", event: "Analiza systemowa" }, { time: "14:00", event: "Sesja Q&A z Architektem" }]
+        },
+        { 
+            id: 3, name: "Spidruk", title: "Logo i identyfikacja wizualna", category: "design", city: "Rzeszów", lat: 50.02284, lng: 21.97448, tag: "HOT", 
+            icon: "img/spidruk.png", availableSeats: 1,
+            date: "28 Maja 2026", time: "10:00 - 15:00", desc: "Tworzenie logotypów na zamówienie",
+            fullDesc: "Tworzymy spójne i unikalne elementy wizualne, które pomogą marką wyróżnić się na tle konkurencji.",
+            schedule: [{ time: "10:00", event: "Concept Art" }, { time: "12:00", event: "Wydruk" }, { time: "14:30", event: "Testowanie prototypu" }]
+        },
+        { 
+            id: 4, name: "Art Studio", title: "Branding i UX Design", category: "design", city: "Rzeszów", lat: 50.02460, lng: 22.03210, tag: "KREATYWNIE", 
+            icon: "img/artstudio.png", availableSeats: 4,
+            date: "2 Czerwca 2026", time: "09:00 - 14:00", desc: "Projektowanie identyfikacji wizualnej marek.",
+            fullDesc: "Zobacz jak powstają logotypy i interfejsy aplikacji mobilnych, z których korzystają tysiące ludzi.",
+            schedule: [{ time: "09:00", event: "Burza mózgów" }, { time: "11:00", event: "Praca w Figmie" }, { time: "13:30", event: "Prezentacja dla klienta" }]
+        },
+        { 
+            id: 5, name: "YASUMI Rzeszów", title: "Technologie w Kosmetologii", category: "beauty", city: "Rzeszów", lat: 50.01620, lng: 22.011680, tag: "SPA", 
+            icon: "img/yasumi.png", availableSeats: 2,
+            date: "5 Czerwca 2026", time: "10:00 - 16:00", desc: "Zaawansowane zabiegi pielęgnacyjne twarzy i ciała.",
+            fullDesc: "Poznaj japońskie rytuały pielęgnacyjne i zobacz jak obsługuje się nowoczesne urządzenia laserowe.",
+            schedule: [{ time: "10:00", event: "Analiza cery" }, { time: "12:30", event: "Pokaz zabiegu Hi-Fu" }, { time: "15:00", event: "Dobór kosmetyków" }]
+        },
+        { 
+            id: 6, name: "Beauty Lab", title: "Zarządzanie Premium SPA", category: "beauty", city: "Rzeszów", lat: 50.02753, lng: 22.03857, tag: "ELEGANCJA", 
+            icon: "img/beautylab.png", availableSeats: 3,
+            date: "8 Czerwca 2026", time: "09:00 - 14:00", desc: "Standardy obsługi klienta w branży Beauty.",
+            fullDesc: "Sprawdź jak funkcjonuje jeden z najbardziej rozpoznawalnych instytutów piękna w Polsce.",
+            schedule: [{ time: "09:00", event: "Standardy Beauty Lab" }, { time: "11:00", event: "Laboratorium piękna" }, { time: "13:00", event: "Konsultacje" }]
+        },
+        { 
+            id: 7, name: "Restauracja Oranżeria", title: "Fine Dining od podstaw", category: "kuchnia", city: "Rzeszów", lat: 50.042, lng: 21.99793, tag: "PYCHA", 
+            icon: "img/oranzeria.png", availableSeats: 2,
+            date: "10 Czerwca 2026", time: "12:00 - 18:00", desc: "Przygotowanie menu degustacyjnego.",
+            fullDesc: "Wejdź do kuchni jednej z najlepszych restauracji w Rzeszowie i zobacz pracę pod presją czasu.",
+            schedule: [{ time: "12:00", event: "Mise en place" }, { time: "14:00", event: "Serwis lunchowy" }, { time: "17:00", event: "Plating (wykładanie)" }]
+        },
+        { 
+            id: 8, name: "Browar Rzeszowski", title: "Sztuka Warzenia Piwa", category: "kuchnia", city: "Rzeszów", lat: 50.038, lng: 22.005, tag: "Rzemiosło", 
+            icon: "img/browar.png", availableSeats: 6,
+            date: "12 Czerwca 2026", time: "10:00 - 14:00", desc: "Proces produkcji piwa rzemieślniczego.",
+            fullDesc: "Dowiedz się, jak tradycja łączy się z nowoczesną technologią produkcji napojów.",
+            schedule: [{ time: "10:00", event: "Warzelnia" }, { time: "11:30", event: "Fermentacja" }, { time: "13:30", event: "Degustacja sensoryczna" }]
+        },
+        { 
+            id: 9, name: "Porsche Centrum Rzeszów", title: "Mechanika Aut Premium", category: "moto", city: "Rzeszów", lat: 50.07248, lng: 22.02093, tag: "SZYBKO", 
+            icon: "img/porsche.png", availableSeats: 2,
+            date: "15 Czerwca 2026", time: "08:00 - 15:00", desc: "Serwis i diagnostyka samochodów sportowych.",
+            fullDesc: "Zobacz jak wygląda serwisowanie najnowocześniejszych aut sportowych i elektrycznych (Taycan).",
+            schedule: [{ time: "08:00", event: "Przyjęcie do serwisu" }, { time: "10:00", event: "Diagnostyka komputerowa" }, { time: "13:00", event: "Jazda testowa" }]
+        },
+        { 
+            id: 10, name: "Harley-Davidson Rzeszów", title: "Świat Motocykli Custom", category: "moto", city: "Rzeszów", lat: 50.06953, lng: 21.93901, tag: "LEGENDA", 
+            icon: "img/harley.png", availableSeats: 4,
+            date: "17 Czerwca 2026", time: "10:00 - 16:00", desc: "Budowa i serwis legendarnych motocykli.",
+            fullDesc: "Poczuj klimat największego salonu Harley-Davidson w tej części Europy.",
+            schedule: [{ time: "10:00", event: "Showroom tour" }, { time: "12:00", event: "Personalizacja maszyn" }, { time: "15:00", event: "Detailing" }]
+        },
+        { 
+            id: 11, name: "Omega Pilzno (Centrum Podkarpackie)", title: "Globalny Łańcuch Dostaw",  category: "logistyka", city: "Rzeszów", lat: 50.05286, lng: 22.00092, tag: "TRANSPORT", 
+            icon: "img/omega.png", availableSeats: 10,
+            date: "20 Czerwca 2026", time: "08:00 - 16:00", desc: "Zarządzanie flotą ponad 700 ciężarówek.",
+            fullDesc: "Spędź dzień w centrum logistycznym i zobacz jak planuje się trasy po całej Europie.",
+            schedule: [{ time: "08:00", event: "Odprawa kierowców" }, { time: "10:00", event: "Planowanie spedycyjne" }, { time: "14:00", event: "Magazyn wysokiego składowania" }]
+        },
+        { 
+            id: 12, name: "InPost Rzeszów", title: "Automatyzacja Paczkomatów", category: "logistyka", city: "Rzeszów", lat: 50.06786, lng: 21.93768, tag: "PACZKA", 
+            icon: "img/inpost.png", availableSeats: 5,
+            date: "22 Czerwca 2026", time: "07:00 - 13:00", desc: "Logistyka ostatniej mili.",
+            fullDesc: "Zobacz jak Twoja paczka trafia do paczkomatu w mniej niż 24 godziny.",
+            schedule: [{ time: "07:00", event: "Sortownia" }, { time: "09:30", event: "Optymalizacja tras" }, { time: "12:00", event: "Serwis maszyn" }]
+        },
+        { 
+            id: 13, name: "Klinika Rzeszów", title: "Ratownictwo w Praktyce", category: "medycyna", city: "Rzeszów", lat: 50.025, lng: 22.015, tag: "MED", 
+            icon: "img/klinika.png", availableSeats: 0,
+            date: "25 Czerwca 2026", time: "14:00 - 18:00", desc: "Dzień na Szpitalnym Oddziale Ratunkowym.",
+            fullDesc: "Wizyta tylko dla osób o mocnych nerwach. Zobacz jak wygląda triaż i praca lekarzy na SOR.",
+            schedule: [{ time: "14:00", event: "Szkolenie BHP" }, { time: "15:30", event: "Obserwacja pracy" }]
+        },
+        { 
+            id: 14, name: "Centrum Medyczne MEDYK", title: "Diagnostyka Obrazowa", category: "medycyna", city: "Rzeszów", lat: 50.02674, lng: 21.99092, tag: "ZDROWIE", 
+            icon: "img/medyk.png", availableSeats: 2,
+            date: "27 Czerwca 2026", time: "09:00 - 14:00", desc: "Jak działa Rezonans Magnetyczny i USG?",
+            fullDesc: "Poznaj nowoczesne metody wykrywania chorób i zobacz pracę techników medycznych.",
+            schedule: [{ time: "09:00", event: "Praca radiologa" }, { time: "11:00", event: "Laboratorium krwi" }, { time: "13:00", event: "Interpretacja wyników" }]
+        },
+        { id: 15, name: "CD Projekt RED", title: "Tworzenie Światów AAA", category: "tech", city: "Kraków", lat: 50.0646, lng: 19.9449, tag: "PRESTIŻ", icon: "img/cdpr.png", availableSeats: 2, date: "30 Czerwca 2026", time: "10:00 - 16:00", desc: "Jak powstawał Wiedźmin?", fullDesc: "Zwiedź słynne studio deweloperskie w Krakowie i zobacz jak artyści tworzą wirtualne miasta.", schedule: [{ time: "10:00", event: "Level Design" }, { time: "13:00", event: "Animacja Mocap" }] },
+        { id: 16, name: "Google", title: "Cloud Architecture", category: "tech", city: "Warszawa", lat: 52.2319, lng: 20.9822, tag: "GLOBAL", icon: "img/google.png", availableSeats: 8, date: "10 Lipca 2026", time: "09:00 - 15:00", desc: "Zarządzanie chmurą.", fullDesc: "Odwiedź warszawskie biuro Google i porozmawiaj z inżynierami chmurowymi.", schedule: [{ time: "09:00", event: "Warsztaty Google Cloud" }] }
+    ];
+
+    let savedWorkshops = [];
+    let mapMarkers = {}; 
+
+    // --- 3. SILNIK WYSZUKIWANIA I FILTROWANIA ---
+    function getFilteredCompanies() {
+        const query = document.getElementById('main-search-input').value.toLowerCase().trim();
+        const activeCategory = document.querySelector('.filter-pill.active').getAttribute('data-category');
+
+        return companies.filter(company => {
+            const categoryMatch = activeCategory === 'all' || company.category === activeCategory;
+            const searchableText = `${company.name} ${company.city} ${company.title} ${company.category} ${company.tag}`.toLowerCase();
+            const textMatch = query === '' || searchableText.includes(query);
+            return categoryMatch && textMatch;
+        });
+    }
+
+    function updateApp() {
+        const filteredData = getFilteredCompanies();
+        renderMarkers(filteredData);
+        renderOffersList(filteredData);
+        
+        const query = document.getElementById('main-search-input').value.trim();
+        if (query !== '' && filteredData.length > 0) {
+            const latLngs = filteredData.map(c => [c.lat, c.lng]);
+            const bounds = L.latLngBounds(latLngs);
+            map.flyToBounds(bounds.pad(0.2), { duration: 0.8 });
+        } else if (query === '') {
+            map.flyTo([50.0413, 21.9990], 13, { duration: 0.8 });
+        }
+    }
+
+    document.getElementById('main-search-input').addEventListener('input', updateApp);
+    document.querySelectorAll('.filter-pill').forEach(pill => {
+        pill.addEventListener('click', (e) => {
+            document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+            e.target.classList.add('active');
+            updateApp();
+        });
+    });
+
+    // --- 4. Renderowanie Markerów ---
+   function renderMarkers(dataToRender) {
+    Object.values(mapMarkers).forEach(m => map.removeLayer(m));
+    mapMarkers = {};
+
+    dataToRender.forEach(company => {
+        const imgHtml = `<img src="${company.icon}" onerror="this.src='${getFallback(company.name)}'">`;
+        const customIcon = L.divIcon({ 
+            className: 'custom-marker', 
+            html: imgHtml, 
+            iconSize: [44, 44], 
+            iconAnchor: [22, 44], 
+            popupAnchor: [0, -44] 
+        });
+
+        const isSaved = savedWorkshops.some(saved => saved.id === company.id);
+        const isFull = company.availableSeats === 0;
+        
+        let btnZapisz = "";
+        if (isSaved) {
+            btnZapisz = `<button class="btn-primary" disabled>Zapisano ✓</button>`;
+        } else if (isFull) {
+            btnZapisz = `<button class="btn-primary" disabled style="background: var(--text-muted); color: white; border-color: var(--text-muted);">Brak miejsc 😔</button>`;
+        } else {
+            // Używamy window.quickSignUp
+            btnZapisz = `<button class="btn-primary" onclick="window.quickSignUp(${company.id})">Szybki Zapis</button>`;
+        }
+
+        const seatsClass = company.availableSeats <= 1 ? 'low' : '';
+
+        const popupContent = `
+            <div class="company-card">
+                <div class="company-header">
+                    <div class="company-icon-wrap">${imgHtml}</div>
+                    <div class="company-title">
+                        <h4>${company.name}</h4>
+                        <span class="company-tag">${company.city}</span>
+                    </div>
+                </div>
+                <div class="company-info">
+                    <div class="seats-badge ${seatsClass}">🔥 Zostało miejsc: ${company.availableSeats}</div>
+                    <p><strong>📅 ${company.date}</strong><br/>${company.desc}</p>
+                    <div class="action-buttons">
+                        ${btnZapisz}
+                        <button class="btn-secondary" onclick="window.openDetails(${company.id})">Dowiedz się więcej</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        const marker = L.marker([company.lat, company.lng], { icon: customIcon }).bindPopup(popupContent).addTo(map);
+        mapMarkers[company.id] = marker; 
+    });
+}
+
+    // --- 5. Renderowanie Listy (Feedu) ---
+    function renderOffersList(dataToRender) {
+        const listContainer = document.getElementById('offers-list');
+        listContainer.innerHTML = '';
+        
+        if(dataToRender.length === 0) {
+            listContainer.innerHTML = `<div style="text-align:center; padding:40px 20px; color:var(--text-muted); font-weight:600;">Nie znaleziono wyników dla Twoich kryteriów. 🥺</div>`;
+            return;
+        }
+
+        dataToRender.forEach(company => {
+            const isFull = company.availableSeats === 0;
+            const seatsHTML = isFull 
+                ? `<span style="color:red; font-size:11px; font-weight:800;">BRAK MIEJSC</span>` 
+                : `<span style="color:var(--hot-pink); font-size:11px; font-weight:800;">${company.availableSeats} MIEJSC</span>`;
+            
+            const imgHtml = `<img src="${company.icon}" onerror="this.src='${getFallback(company.name)}'">`;
+
+            listContainer.innerHTML += `
+                <div class="mini-card" onclick="focusMarker(${company.id})">
+                    <div class="mc-icon">${imgHtml}</div>
+                    <div class="mc-info">
+                        <h4>${company.name}</h4>
+                        <p>${company.title}</p>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span class="company-tag">📍 ${company.city}</span>
+                            ${seatsHTML}
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    function focusMarker(companyId) {
+        const company = companies.find(c => c.id === companyId);
+        map.setView([company.lat, company.lng], 15, { animate: true, duration: 0.5 });
+        if(mapMarkers[companyId]) {
+            setTimeout(() => { mapMarkers[companyId].openPopup(); }, 500); 
+        }
+    }
+
+    // --- 6. Strona Szczegółów ---
+    function openDetails(companyId) {
+        const company = companies.find(c => c.id === companyId);
+        const container = document.getElementById('details-content-area');
+        
+        const isSaved = savedWorkshops.some(saved => saved.id === company.id);
+        const isFull = company.availableSeats === 0;
+        
+        let btnHtml = "";
+        if (isSaved) btnHtml = `<button class="btn-primary btn-ticket" disabled>Jesteś na liście! ✓</button>`;
+        else if (isFull) btnHtml = `<button class="btn-primary btn-ticket" disabled style="background: var(--text-muted);">Brak wolnych miejsc</button>`;
+        else btnHtml = `<button class="btn-primary btn-ticket" onclick="detailsSignUp(${company.id})">Zapisz się teraz</button>`;
+
+        const seatsClass = company.availableSeats <= 1 ? 'color: var(--hot-pink);' : 'color: var(--deep-black);';
+        const imgHtml = `<img src="${company.icon}" class="company-icon-img" onerror="this.src='${getFallback(company.name)}'">`;
+
+        container.innerHTML = `
+            <button class="back-btn" onclick="switchView('map')">← Wróć do mapy i feedu</button>
+            <div class="detail-banner">
+                <div class="detail-banner-icon">${imgHtml}</div>
+                <div class="detail-banner-text">
+                    <h3>${company.name} (📍 ${company.city})</h3>
+                    <h1>${company.title}</h1>
+                </div>
+            </div>
+            <div class="detail-layout">
+                <div class="detail-left">
+                    <section><h2>📖 O warsztacie</h2><p>${company.fullDesc}</p></section>
+                    <section><h2>⏱️ Harmonogram dnia</h2><ul class="schedule-list">
+                        ${company.schedule.map(s => `<li><span class="schedule-time">${s.time}</span><span class="schedule-desc">${s.event}</span></li>`).join('')}
+                    </ul></section>
+                </div>
+                <div class="detail-right">
+                    <div class="ticket-card">
+                        <div class="ticket-header">
+                            <p>Termin wizyty</p>
+                            <h3>${company.date}</h3>
+                            <p style="margin-top:4px; font-weight:800; color:var(--deep-black); margin-bottom:12px;">${company.time}</p>
+                            <div style="font-size: 14px; font-weight: 900; ${seatsClass}">🔥 Wolne miejsca: ${company.availableSeats}</div>
+                        </div>
+                        ${(!isSaved && !isFull) ? `
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" id="terms-checkbox">
+                            <label for="terms-checkbox">Akceptuję <a>Regulamin</a>.</label>
+                        </div>` : ''}
+                        ${btnHtml}
+                    </div>
+                </div>
+            </div>
+        `;
+        switchView('details');
+        window.scrollTo(0, 0);
+    }
+
+    // --- 7. Logika Rezerwacji Miejsc ---
+    function quickSignUp(companyId) {
+        processSignUp(companyId);
+        alert("Zapisano pomyślnie! Miejsce zarezerwowane.");
+    }
+
+    function detailsSignUp(companyId) {
+        if (!document.getElementById('terms-checkbox').checked) { alert("Musisz zaakceptować regulamin! 📜"); return; }
+        processSignUp(companyId);
+        alert("Świetnie! Twoje miejsce jest zarezerwowane.");
+    }
+
+    function processSignUp(companyId) {
+        const company = companies.find(c => c.id === companyId);
+        if (!savedWorkshops.includes(company) && company.availableSeats > 0) {
+            company.availableSeats--; 
+            savedWorkshops.push(company);
+            renderUpcoming();
+            updateApp();
+            
+            if(document.getElementById('view-details').classList.contains('active')) {
+                openDetails(companyId);
+            }
+        }
+    }
+
+    // Dane o odznakach - możesz to potem przenieść do bazy
+const availableBadges = [
+    { id: 'first_step', name: 'Pierwszy Krok', icon: '🚀', category: 'all', goal: 1 },
+    { id: 'tech_ninja', name: 'Tech Ninja', icon: '💻', category: 'tech', goal: 2 },
+    { id: 'creative', name: 'Artysta', icon: '🎨', category: 'design', goal: 4 },
+    { id: 'foodie', name: 'Smakosz', icon: '🍔', category: 'kuchnia', goal: 2 }
+];
+
+// --- 8. Renderowanie Profilu ---
+function renderUpcoming() {
+    const listContainer = document.getElementById('upcoming-list');
+    
+    if (savedWorkshops.length === 0) {
+        listContainer.innerHTML = `<div style="grid-column: 1/-1; padding: 20px; border: 2px dashed var(--border-light); border-radius: 16px; text-align: center; color: var(--text-muted); font-weight: 600;">Brak zapisów. Przejdź do Feedu!</div>`;
+        renderBadges(); // Odśwież też odznaki (będą zablokowane)
+        return;
+    }
+
+    listContainer.innerHTML = savedWorkshops.map(company => `
+        <div class="upcoming-card">
+            <div class="uc-icon"><img src="${company.icon}" class="company-icon-img" onerror="this.src='${getFallback(company.name)}'"></div>
+            <div class="uc-info">
+                <h4>${company.title}</h4>
+                <p>🏢 ${company.name} | 📅 ${company.date}</p>
+            </div>
+        </div>
+    `).join('');
+
+    renderBadges();
+}
+
+
+
+function renderBadges() {
+    const badgesContainer = document.getElementById('badges-container');
+    
+    // Pobieramy kategorie z zapisanych warsztatów
+    const userCategories = savedWorkshops.map(c => c.category);
+
+    badgesContainer.innerHTML = availableBadges.map(badge => {
+        let currentProgress = 0;
+
+        // Obliczamy progres
+        if (badge.category === 'all') {
+            currentProgress = savedWorkshops.length;
+        } else {
+            currentProgress = userCategories.filter(cat => cat === badge.category).length;
+        }
+
+        const isUnlocked = currentProgress >= badge.goal;
+        const progressPercent = Math.min((currentProgress / badge.goal) * 100, 100);
+
+        return `
+            <div class="badge-card ${isUnlocked ? '' : 'badge-locked'}">
+                <span class="badge-icon">${badge.icon}</span>
+                <span class="badge-name">${badge.name}</span>
+                
+                <div class="badge-progress-container">
+                    <div class="badge-progress-bar" style="width: ${progressPercent}%"></div>
+                </div>
+                
+                <span class="badge-count">${isUnlocked ? 'UKOŃCZONO ✓' : `PROGRES: ${currentProgress}/${badge.goal}`}</span>
+            </div>
+        `;
+    }).join('');
+}
+
+    // --- 9. Nawigacja (POPRAWIONA LOGIKA) ---
+    function switchView(viewId, navBtn = null) {
+        // Ukryj wszystkie widoki
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        // Pokaż wybrany
+        const targetView = document.getElementById('view-' + viewId);
+        if (targetView) targetView.classList.add('active');
+
+        // Resetuj wszystkie przyciski nav-btn
+        const allNavButtons = document.querySelectorAll('.nav-btn');
+        allNavButtons.forEach(b => b.classList.remove('active'));
+
+        if(navBtn) {
+            // Jeśli kliknięto przycisk fizycznie
+            navBtn.classList.add('active');
+        } else {
+            // Jeśli wywołano z kodu (np. przez parametr URL)
+            // Szukamy przycisku po tekście lub akcji, by uniknąć problemów z indeksami
+            if (viewId === 'map') {
+                const mapBtn = Array.from(allNavButtons).find(btn => btn.innerText.includes('MAPA'));
+                if (mapBtn) mapBtn.classList.add('active');
+            } else if (viewId === 'profile') {
+                const profileBtn = Array.from(allNavButtons).find(btn => btn.innerText.includes('PROFIL'));
+                if (profileBtn) profileBtn.classList.add('active');
+            }
+        }
+
+        // Odśwież rozmiar mapy jeśli przełączono na mapę
+        if (viewId === 'map') {
+            setTimeout(() => { map.invalidateSize(); }, 100);
+        }
+    }
+
+    // --- 10. Odbiornik parametrów URL (NOWE - NAPRAWA) ---
+    window.addEventListener('load', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const viewFromUrl = urlParams.get('view'); // szuka 'map' lub 'profile'
+
+        if (viewFromUrl) {
+            // Wywołujemy z lekkim opóźnieniem, by mieć pewność że DOM jest gotowy
+            setTimeout(() => {
+                switchView(viewFromUrl);
+            }, 50);
+        }
+    });
+
+    // START APLIKACJI
+    updateApp();
+    renderUpcoming();
+</script>
+</body>
+</html>

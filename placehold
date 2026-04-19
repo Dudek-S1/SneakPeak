@@ -1,0 +1,206 @@
+const companies = [
+        // Istniejące
+        { 
+            id: 1, name: "PrimeBit Games", title: "Dzień z Game Devem", category: "tech", lat: 50.038, lng: 22.002, icon: "💻", tag: "NOWE", 
+            date: "24 Maja 2026", time: "09:00 - 14:00", desc: "Zobacz jak działa produkcja gier komputerowych na żywo.",
+            fullDesc: "Zanurz się w świecie kodu! Podczas tego Job Shadowingu zobaczysz, jak wygląda prawdziwy dzień programisty gier komputerowych. Nie potrzebujesz żadnego doświadczenia.",
+            schedule: [
+                { time: "09:00", event: "Poranna kawa i intro" }, { time: "10:30", event: "Pair programming" }, { time: "13:00", event: "Wspólna pizza 🍕" }
+            ]
+        },
+        { 
+            id: 2, name: "Studio Pixel", title: "Game Design od Kuchni", category: "design", lat: 50.043, lng: 22.005, icon: "🎨", tag: "HOT", 
+            date: "28 Maja 2024", time: "10:00 - 15:00", desc: "Proces tworzenia postaci 3D.",
+            fullDesc: "Gry to potężny przemysł. Odwiedź studio, które tworzy gry indie. Zobaczysz jak powstaje szkic koncepcyjny i jak modeluje się w 3D.",
+            schedule: [
+                { time: "10:00", event: "Powitanie w studiu" }, { time: "12:00", event: "Magia 3D - podstawy Blendera" }, { time: "14:30", event: "Testowanie gry" }
+            ]
+        },
+        // NOWE OFERTY
+        { 
+            id: 3, name: "CyberGuard", title: "Ethical Hacking 101", category: "tech", lat: 50.049, lng: 21.980, icon: "🛡️", tag: "FREE", 
+            date: "5 Czerwca 2024", time: "08:00 - 12:00", desc: "Jak legalnie włamać się do systemu?",
+            fullDesc: "Zastanawiałeś się kiedyś jak myślą hakerzy? Spędź dzień z zespołem Blue Team, który chroni dane przed cyberatakami. Pokażemy Ci, jak szukać luk w zabezpieczeniach aplikacji internetowych.",
+            schedule: [
+                { time: "08:00", event: "Breefing bezpieczeństwa" }, { time: "09:30", event: "Symulacja ataku phishingowego" }, { time: "11:00", event: "Analiza logów" }
+            ]
+        },
+        { 
+            id: 4, name: "Klinika Rzeszów", title: "Ratownictwo w Praktyce", category: "medycyna", lat: 50.025, lng: 22.015, icon: "🚑", tag: "2 MIEJSCA", 
+            date: "12 Czerwca 2024", time: "14:00 - 18:00", desc: "Dzień na Szpitalnym Oddziale Ratunkowym.",
+            fullDesc: "Wizyta tylko dla osób o mocnych nerwach. Zobacz jak wygląda triaż, praca ratowników medycznych i obsługa najnowocześniejszego sprzętu do ratowania życia.",
+            schedule: [
+                { time: "14:00", event: "Szkolenie BHP i odzież ochronna" }, { time: "15:00", event: "Obserwacja pracy na SOR" }, { time: "17:00", event: "Kurs pierwszej pomocy na fantomie" }
+            ]
+        },
+        { 
+            id: 5, name: "VegeBite", title: "Szef Kuchni Roślinnej", category: "gastro", lat: 50.030, lng: 21.990, icon: "🥑", tag: "NOWE", 
+            date: "2 Czerwca 2024", time: "10:00 - 15:00", desc: "Kreatywność bez mięsa.",
+            fullDesc: "Poczuj tempo pracy profesjonalnej kuchni! Wejdziesz na zaplecze jednej z najlepszych wegańskich restauracji w mieście. Będziesz cieniem szefa kuchni podczas serwisu obiadowego.",
+            schedule: [
+                { time: "10:00", event: "Przygotowanie stanowisk (Mise en place)" }, { time: "12:00", event: "Start serwisu - obserwacja" }, { time: "14:00", event: "Degustacja i rozmowa z Szefem" }
+            ]
+        },
+        { 
+            id: 6, name: "DropPoint Euro", title: "Logistyka Przyszłości", category: "logistyka", lat: 50.060, lng: 22.030, icon: "📦", tag: "EKO", 
+            date: "20 Czerwca 2024", time: "09:00 - 13:00", desc: "Drony i roboty magazynowe.",
+            fullDesc: "Odwiedź potężne centrum dystrybucyjne zarządzane przez AI. Zobaczysz, jak autonomiczne roboty pakują przesyłki i jak planuje się trasy dla tysięcy kurierów w całej Europie.",
+            schedule: [
+                { time: "09:00", event: "Prezentacja centrum sterowania" }, { time: "10:00", event: "Przejazd przez zautomatyzowany magazyn" }, { time: "12:00", event: "Planowanie trasy z Dyspozytorem" }
+            ]
+        }
+    ];
+
+
+    { 
+            id: 1, name: "PrimeBit Games", title: "Dzień z Game Devem", category: "tech", lat: 50.038, lng: 22.002, tag: "NOWE", 
+            icon: "img/PBlogo.png", availableSeats: 3,
+            date: "24 Maja 2026", time: "09:00 - 14:00", desc: "Zobacz jak działa produkcja gier komputerowych na żywo.",
+            fullDesc: "Zanurz się w świecie kodu! Podczas tego Job Shadowingu zobaczysz, jak wygląda prawdziwy dzień programisty gier komputerowych.",
+            schedule: [{ time: "09:00", event: "Poranna kawa i intro" }, { time: "10:30", event: "Pair programming" }, { time: "13:00", event: "Wspólna pizza 🍕" }]
+        },
+        { 
+            id: 2, name: "Studio Pixel", title: "Game Design od Kuchni", category: "design", lat: 50.043, lng: 22.005, tag: "HOT", 
+            icon: "img/studiopixel.png", availableSeats: 1, // Zostało tylko 1 miejsce!
+            date: "28 Maja 2024", time: "10:00 - 15:00", desc: "Proces tworzenia postaci 3D.",
+            fullDesc: "Gry to potężny przemysł. Odwiedź studio, które tworzy gry indie.",
+            schedule: [{ time: "10:00", event: "Powitanie w studiu" }, { time: "12:00", event: "Magia 3D" }, { time: "14:30", event: "Testowanie gry" }]
+        },
+        { 
+            id: 3, name: "CyberGuard", title: "Ethical Hacking 101", category: "tech", lat: 50.049, lng: 21.980, tag: "FREE", 
+            icon: "img/cyberguard.png", availableSeats: 5,
+            date: "5 Czerwca 2024", time: "08:00 - 12:00", desc: "Jak legalnie włamać się do systemu?",
+            fullDesc: "Zastanawiałeś się kiedyś jak myślą hakerzy? Spędź dzień z zespołem Blue Team.",
+            schedule: [{ time: "08:00", event: "Breefing bezpieczeństwa" }, { time: "09:30", event: "Symulacja ataku" }]
+        },
+        { 
+            id: 4, name: "Klinika Rzeszów", title: "Ratownictwo w Praktyce", category: "medycyna", lat: 50.025, lng: 22.015, tag: "MED", 
+            icon: "img/klinika.png", availableSeats: 0, // Symulacja braku miejsc
+            date: "12 Czerwca 2024", time: "14:00 - 18:00", desc: "Dzień na Szpitalnym Oddziale Ratunkowym.",
+            fullDesc: "Wizyta tylko dla osób o mocnych nerwach. Zobacz jak wygląda triaż.",
+            schedule: [{ time: "14:00", event: "Szkolenie BHP" }, { time: "15:00", event: "Obserwacja pracy na SOR" }]
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const companies = [
+    { 
+        id: 1, name: "PrimeBit Games", title: "Dzień z Game Devem", category: "tech", lat: 50.07058, lng: 21.97042, tag: "NOWE", 
+        icon: "img/PBlogo.png", availableSeats: 3,
+        date: "24 Maja 2026", time: "09:00 - 14:00", desc: "Zobacz jak działa produkcja gier komputerowych na żywo.",
+        fullDesc: "Zanurz się w świecie kodu! Podczas tego Job Shadowingu zobaczysz, jak wygląda prawdziwy dzień programisty gier komputerowych. Nie potrzebujesz żadnego doświadczenia.",
+        schedule: [{ time: "09:00", event: "Poranna kawa i intro" }, { time: "10:30", event: "Pair programming" }, { time: "13:00", event: "Wspólna pizza 🍕" }]
+    },
+    // --- TECH ---
+    { 
+        id: 2, name: "Asseco Poland", title: "Architektura Systemów Bankowych", category: "tech", lat: 50.05168, lng: 22.03324, tag: "PRESTIŻ", 
+        icon: "img/asseco.png", availableSeats: 5,
+        date: "26 Maja 2026", time: "08:30 - 15:00", desc: "Poznaj kulisy tworzenia systemów dla największych banków.",
+        fullDesc: "Spędź dzień w największej firmie IT w Polsce. Zobaczysz jak zarządza się projektami o skali globalnej.",
+        schedule: [{ time: "08:30", event: "Daily Stand-up" }, { time: "11:00", event: "Analiza systemowa" }, { time: "14:00", event: "Sesja Q&A z Architektem" }]
+    },
+    // --- DESIGN ---
+    { 
+        id: 3, name: "Studio Pixel", title: "Game Design od Kuchni", category: "design", lat: 50.043, lng: 22.005, tag: "HOT", 
+        icon: "img/studiopixel.png", availableSeats: 1,
+        date: "28 Maja 2026", time: "10:00 - 15:00", desc: "Proces tworzenia postaci 3D i UX w grach.",
+        fullDesc: "Gry to potężny przemysł. Odwiedź studio, które tworzy polskie gry indie i zobacz jak powstaje art-style.",
+        schedule: [{ time: "10:00", event: "Concept Art" }, { time: "12:00", event: "Modelowanie 3D" }, { time: "14:30", event: "Testowanie prototypu" }]
+    },
+    { 
+        id: 4, name: "Agencja Creality", title: "Branding i UX Design", category: "design", lat: 50.035, lng: 21.995, tag: "KREATYWNIE", 
+        icon: "img/creality.png", availableSeats: 4,
+        date: "2 Czerwca 2026", time: "09:00 - 14:00", desc: "Projektowanie identyfikacji wizualnej marek.",
+        fullDesc: "Zobacz jak powstają logotypy i interfejsy aplikacji mobilnych, z których korzystają tysiące ludzi.",
+        schedule: [{ time: "09:00", event: "Burza mózgów" }, { time: "11:00", event: "Praca w Figmie" }, { time: "13:30", event: "Prezentacja dla klienta" }]
+    },
+    // --- BEAUTY ---
+    { 
+        id: 5, name: "YASUMI Rzeszów", title: "Technologie w Kosmetologii", category: "beauty", lat: 50.01620, lng: 22.011680, tag: "SPA", 
+        icon: "img/yasumi.png", availableSeats: 2,
+        date: "5 Czerwca 2026", time: "10:00 - 16:00", desc: "Zaawansowane zabiegi pielęgnacyjne twarzy i ciała.",
+        fullDesc: "Poznaj japońskie rytuały pielęgnacyjne i zobacz jak obsługuje się nowoczesne urządzenia laserowe.",
+        schedule: [{ time: "10:00", event: "Analiza cery" }, { time: "12:30", event: "Pokaz zabiegu Hi-Fu" }, { time: "15:00", event: "Dobór kosmetyków" }]
+    },
+    { 
+        id: 6, name: "Instytut Dr Irena Eris", title: "Zarządzanie Premium SPA", category: "beauty", lat: 50.041, lng: 22.018, tag: "ELEGANCJA", 
+        icon: "img/eris.png", availableSeats: 3,
+        date: "8 Czerwca 2026", time: "09:00 - 14:00", desc: "Standardy obsługi klienta w branży Beauty.",
+        fullDesc: "Sprawdź jak funkcjonuje jeden z najbardziej rozpoznawalnych instytutów piękna w Polsce.",
+        schedule: [{ time: "09:00", event: "Standardy Eris" }, { time: "11:00", event: "Laboratorium piękna" }, { time: "13:00", event: "Konsultacje" }]
+    },
+    // --- KUCHNIA ---
+    { 
+        id: 7, name: "Restauracja Oranżeria", title: "Fine Dining od podstaw", category: "kuchnia", lat: 50.037, lng: 22.004, tag: "PYCHA", 
+        icon: "img/oranzeria.png", availableSeats: 2,
+        date: "10 Czerwca 2026", time: "12:00 - 18:00", desc: "Przygotowanie menu degustacyjnego.",
+        fullDesc: "Wejdź do kuchni jednej z najlepszych restauracji w Rzeszowie i zobacz pracę pod presją czasu.",
+        schedule: [{ time: "12:00", event: "Mise en place" }, { time: "14:00", event: "Serwis lunchowy" }, { time: "17:00", event: "Plating (wykładanie)" }]
+    },
+    { 
+        id: 8, name: "Browar Rzeszowski", title: "Sztuka Warzenia Piwa", category: "kuchnia", lat: 50.038, lng: 22.005, tag: "Rzemiosło", 
+        icon: "img/browar.png", availableSeats: 6,
+        date: "12 Czerwca 2026", time: "10:00 - 14:00", desc: "Proces produkcji piwa rzemieślniczego.",
+        fullDesc: "Dowiedz się, jak tradycja łączy się z nowoczesną technologią produkcji napojów.",
+        schedule: [{ time: "10:00", event: "Warzelnia" }, { time: "11:30", event: "Fermentacja" }, { time: "13:30", event: "Degustacja sensoryczna" }]
+    },
+    // --- MOTO ---
+    { 
+        id: 9, name: "Porsche Centrum Rzeszów", title: "Mechanika Aut Premium", category: "moto", lat: 50.061, lng: 22.031, tag: "SZYBKO", 
+        icon: "img/porsche.png", availableSeats: 2,
+        date: "15 Czerwca 2026", time: "08:00 - 15:00", desc: "Serwis i diagnostyka samochodów sportowych.",
+        fullDesc: "Zobacz jak wygląda serwisowanie najnowocześniejszych aut sportowych i elektrycznych (Taycan).",
+        schedule: [{ time: "08:00", event: "Przyjęcie do serwisu" }, { time: "10:00", event: "Diagnostyka komputerowa" }, { time: "13:00", event: "Jazda testowa" }]
+    },
+    { 
+        id: 10, name: "Harley-Davidson Rzeszów", title: "Świat Motocykli Custom", category: "moto", lat: 50.015, lng: 22.008, tag: "LEGENDA", 
+        icon: "img/harley.png", availableSeats: 4,
+        date: "17 Czerwca 2026", time: "10:00 - 16:00", desc: "Budowa i serwis legendarnych motocykli.",
+        fullDesc: "Poczuj klimat największego salonu Harley-Davidson w tej części Europy.",
+        schedule: [{ time: "10:00", event: "Showroom tour" }, { time: "12:00", event: "Personalizacja maszyn" }, { time: "15:00", event: "Detailing" }]
+    },
+    // --- LOGISTYKA ---
+    { 
+        id: 11, name: "Omega Pilzno (Centrum Podkarpackie)", title: "Globalny Łańcuch Dostaw", category: "logistyka", lat: 50.05286, lng: 22.00092, tag: "TRANSPORT", 
+        icon: "img/omega.png", availableSeats: 10,
+        date: "20 Czerwca 2026", time: "08:00 - 16:00", desc: "Zarządzanie flotą ponad 700 ciężarówek.",
+        fullDesc: "Spędź dzień w centrum logistycznym i zobacz jak planuje się trasy po całej Europie.",
+        schedule: [{ time: "08:00", event: "Odprawa kierowców" }, { time: "10:00", event: "Planowanie spedycyjne" }, { time: "14:00", event: "Magazyn wysokiego składowania" }]
+    },
+    { 
+        id: 12, name: "InPost Rzeszów", title: "Automatyzacja Paczkomatów", category: "logistyka", lat: 50.070, lng: 22.025, tag: "PACZKA", 
+        icon: "img/inpost.png", availableSeats: 5,
+        date: "22 Czerwca 2026", time: "07:00 - 13:00", desc: "Logistyka ostatniej mili.",
+        fullDesc: "Zobacz jak Twoja paczka trafia do paczkomatu w mniej niż 24 godziny.",
+        schedule: [{ time: "07:00", event: "Sortownia" }, { time: "09:30", event: "Optymalizacja tras" }, { time: "12:00", event: "Serwis maszyn" }]
+    },
+    // --- MEDYCYNA ---
+    { 
+        id: 13, name: "Klinika Rzeszów", title: "Ratownictwo w Praktyce", category: "medycyna", lat: 50.025, lng: 22.015, tag: "MED", 
+        icon: "img/klinika.png", availableSeats: 0,
+        date: "25 Czerwca 2026", time: "14:00 - 18:00", desc: "Dzień na Szpitalnym Oddziale Ratunkowym.",
+        fullDesc: "Wizyta tylko dla osób o mocnych nerwach. Zobacz jak wygląda triaż i praca lekarzy na SOR.",
+        schedule: [{ time: "14:00", event: "Szkolenie BHP" }, { time: "15:30", event: "Obserwacja pracy" }]
+    },
+    { 
+        id: 14, name: "Centrum Medyczne MEDYK", title: "Diagnostyka Obrazowa", category: "medycyna", lat: 50.02674, lng: 21.99092, tag: "ZDROWIE", 
+        icon: "img/medyk.png", availableSeats: 2,
+        date: "27 Czerwca 2026", time: "09:00 - 14:00", desc: "Jak działa Rezonans Magnetyczny i USG?",
+        fullDesc: "Poznaj nowoczesne metody wykrywania chorób i zobacz pracę techników medycznych.",
+        schedule: [{ time: "09:00", event: "Praca radiologa" }, { time: "11:00", event: "Laboratorium krwi" }, { time: "13:00", event: "Interpretacja wyników" }]
+    }
+];
